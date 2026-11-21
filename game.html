@@ -28,7 +28,6 @@
       text-shadow: 0 3px 0 #0a162a;
       user-select: none;
     }
-    /* 「方」「塊」「斬」固定相同字槽寬度與間距，三個字間隔完全一致 */
     .title-word-group {
       display: inline-flex;
       align-items: center;
@@ -42,7 +41,6 @@
       height: 1.15em;
       line-height: 1;
     }
-    /* 「斬」字顏色跟前面「方塊」一樣（#7df9ff），只劈到中間（55%），下半部完整相連 */
     .slashed-zhan {
       position: relative;
       display: inline-flex;
@@ -64,23 +62,19 @@
       color: #7df9ff;
       text-shadow: 0 3px 0 #0a162a;
     }
-    /* 下半部完整保留（54% 以下） */
     .slashed-zhan .zhan-base {
       clip-path: polygon(0 54%, 100% 54%, 100% 100%, 0 100%);
     }
-    /* 上半左邊：以中間（50%, 55%）為支點往左微張形成 V 裂口 */
     .slashed-zhan .zhan-top-left {
       clip-path: polygon(0 0, 50% 0, 50% 56%, 0 56%);
       transform-origin: 50% 55%;
       transform: translateX(-1px) rotate(-11deg);
     }
-    /* 上半右邊：以中間（50%, 55%）為支點往右微張形成 V 裂口 */
     .slashed-zhan .zhan-top-right {
       clip-path: polygon(50% 0, 100% 0, 100% 56%, 50% 56%);
       transform-origin: 50% 55%;
       transform: translateX(1px) rotate(11deg);
     }
-    /* 人物手拿的長茅從上方往下刺到「斬」字中間 */
     .spear-prop {
       position: absolute;
       left: 50%;
@@ -91,7 +85,6 @@
       pointer-events: none;
       z-index: 2;
     }
-    /* 木質長柄 */
     .spear-prop .spear-shaft {
       position: absolute;
       left: 50%;
@@ -103,7 +96,6 @@
       border-radius: 1px;
       box-shadow: 0 1px 0 #0a162a;
     }
-    /* 矛尖朝下刺入正中間 */
     .spear-prop .spear-tip {
       position: absolute;
       left: 50%;
@@ -116,7 +108,6 @@
       transform: translateX(-50%);
       filter: drop-shadow(0 1px 0 #0a162a);
     }
-    /* 紅色矛穗 */
     .spear-prop .spear-tassel {
       position: absolute;
       left: calc(50% + 2px);
@@ -127,7 +118,6 @@
       border-radius: 1px;
     }
 
-    /* 三顆愛心固定完全相同字體大小與寬度 */
     .hearts-group {
       display: inline-flex;
       align-items: center;
@@ -197,6 +187,37 @@
     .key-space { color: #5ef2ff; }
     .key-shift { color: #ffd666; }
     .key-enter { color: #95de64; }
+
+    #leaderboardPanel {
+      width: 540px;
+      max-width: 95vw;
+      margin-top: 14px;
+      background: #1b2e4b;
+      border: 2px solid #5b9bd5;
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-sizing: border-box;
+    }
+    #leaderboardPanel h3 {
+      margin: 0 0 8px 0;
+      font-size: 17px;
+      color: #ffe58f;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #syncStatus {
+      font-size: 13px;
+      font-weight: 600;
+      color: #7df9ff;
+    }
+    #lbList {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #e6f4ff;
+    }
   </style>
 </head>
 <body>
@@ -212,7 +233,96 @@
     方向鍵移動｜<span class="key-space">空白鍵</span>刺 1 格｜<span class="key-shift">Shift</span>橫砍 2 格｜<span class="key-enter">Enter</span>跳過記憶
   </div>
 
+  <div id="leaderboardPanel">
+    <h3>
+      <span>🏆 排行榜（Leaderboard）</span>
+      <span id="syncStatus">尚未同步</span>
+    </h3>
+    <ol id="lbList">
+      <li>破關或遊戲結束後自動上傳戰績並讀取最新排行</li>
+    </ol>
+  </div>
+
   <script>
+    // ====== 前後端雙向溝通設定 ======
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzW9ATS7oMu_rUKBdurmz6KQhPVAZ5IStfkyQgnVcJN0nCwcFU3tcyd6_1ObH1E6NAD/exec';
+    const scorePlayerName = (localStorage.getItem('blockSlash_playerName') || '勇者').trim() || '勇者';
+    let scoreRunStart = Date.now();
+    let scoreSent = false;
+
+    const syncStatusEl = document.getElementById('syncStatus');
+    const lbListEl = document.getElementById('lbList');
+
+    function renderLeaderboardUI(rows) {
+      if (!Array.isArray(rows) || rows.length === 0) {
+        lbListEl.innerHTML = '<li>目前尚無戰績紀錄</li>';
+        return;
+      }
+      lbListEl.innerHTML = rows.slice(0, 5).map((item, idx) => {
+        const name = item.playerName || item.PlayerName || '勇者';
+        const stage = item.clearedStage || item.ClearedStage || '';
+        const sec = item.totalTimeSec ?? item.TotalTimeSec ?? 0;
+        const hpVal = item.remainingHP ?? item.RemainingHP ?? 0;
+        return `<li>#${idx + 1} <strong>${name}</strong> — ${stage}（耗時 ${sec}s，剩餘 ♥${hpVal}）</li>`;
+      }).join('');
+    }
+
+    async function fetchLeaderboardFromSheet() {
+      if (!API_URL || API_URL.includes('你的_APPS_SCRIPT_EXEC_網址')) {
+        syncStatusEl.textContent = '請先填入 API_URL';
+        return;
+      }
+      try {
+        syncStatusEl.textContent = '讀取排行榜中...';
+        const res = await fetch(`${API_URL}?action=leaderboard`);
+        const data = await res.json();
+        if (data && data.ok && Array.isArray(data.leaderboard)) {
+          renderLeaderboardUI(data.leaderboard);
+          syncStatusEl.textContent = '已同步';
+        } else {
+          syncStatusEl.textContent = '讀取失敗';
+        }
+      } catch (err) {
+        console.error('讀取排行榜失敗：', err);
+        syncStatusEl.textContent = '連線失敗';
+      }
+    }
+
+    async function submitScoreToSheet(clearedStageLabel, remainingHP) {
+      if (scoreSent) return;
+      if (!API_URL || API_URL.includes('你的_APPS_SCRIPT_EXEC_網址')) {
+        syncStatusEl.textContent = '未設定 API_URL，戰績未寫入';
+        return;
+      }
+      scoreSent = true;
+      const totalTimeSec = Math.max(1, Math.round((Date.now() - scoreRunStart) / 1000));
+      syncStatusEl.textContent = '上傳戰績中...';
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'addScore',
+            playerName: scorePlayerName,
+            clearedStage: clearedStageLabel,
+            remainingHP: remainingHP,
+            totalTimeSec: totalTimeSec,
+            mode: '標準10關'
+          })
+        });
+        const result = await res.json().catch(() => ({}));
+        if (result && result.ok) {
+          syncStatusEl.textContent = '戰績已寫入！更新排行中...';
+          await fetchLeaderboardFromSheet();
+        } else {
+          syncStatusEl.textContent = '寫入回傳異常';
+        }
+      } catch (err) {
+        console.error('上傳戰績失敗：', err);
+        syncStatusEl.textContent = '戰績上傳失敗';
+      }
+    }
+
     const canvas = document.getElementById('c');
     const ctx = canvas.getContext('2d');
 
@@ -221,7 +331,6 @@
     const understandBtn = document.getElementById('understandBtn');
 
     const FONT_FAMILY = '"Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif';
-
     const GAME_TITLE_HTML = `<span class="title-word-group"><span class="title-char-slot">方</span><span class="title-char-slot">塊</span><span class="slashed-zhan"><span class="zhan-base">斬</span><span class="zhan-top-left">斬</span><span class="zhan-top-right">斬</span><span class="spear-prop"><span class="spear-shaft"></span><span class="spear-tassel"></span><span class="spear-tip"></span></span></span></span><span>!</span>`;
 
     // ================= 8-Bit 音效引擎 + 遊玩背景旋律 =================
@@ -354,7 +463,6 @@
     const pCtx = pCanvas.getContext('2d');
     pCtx.imageSmoothingEnabled = false;
 
-    // 動態字形矩陣產生器：直接用字體渲染字形並取樣成 gridSize x gridSize（1=白塊需保留, 0=空白需打掉）
     function generateCharGrid(char, gridSize = 7, threshold = 0.24) {
       const sampleRes = 128;
       const gCanvas = document.createElement('canvas');
@@ -403,7 +511,6 @@
       return map;
     }
 
-    // 7x7 幾何圖案定義（1=保留白塊, 0=空白需打掉）
     const SHAPE_PATTERNS = {
       triangle: [
         [0, 0, 0, 1, 0, 0, 0],
@@ -502,7 +609,7 @@
     let levelIdx = 0;
     let hp = MAX_HP;
     let currentLevel = LEVELS[0];
-    let phase = 'note'; // 'note' | 'intro' | 'memorize' | 'play' | 'result' | 'dead' | 'victory'
+    let phase = 'note';
     let noteAge = 0;
     let noteOffsetX = -460;
     let introStepIdx = 0;
@@ -620,6 +727,8 @@
       levelIdx = 0;
       prevMemorizeSec = null;
       memNoticeTimer = 0;
+      scoreRunStart = Date.now();
+      scoreSent = false;
       phase = 'intro';
       introStepIdx = 0;
       introTimer = INTRO_STEPS[0].dur;
@@ -713,6 +822,7 @@
         SFX.sad();
         updateTitleBar(true);
         msg.textContent = '三顆心都沒有了...按 Enter 從第 1 關重新開始';
+        submitScoreToSheet(levelIdx > 0 ? `第 ${levelIdx} 關` : '第 0 關', 0);
         return;
       }
 
@@ -727,6 +837,7 @@
         spawnVictoryConfetti();
         updateTitleBar(false);
         msg.textContent = '恭喜你 成功破完所有關卡!!（按 Enter 再玩一次）';
+        submitScoreToSheet(`全破（共 ${LEVELS.length} 關）`, hp);
         return;
       }
 
@@ -1074,8 +1185,8 @@
     }
 
     function draw8BitClouds() {
-      pxRect(0, 0, PIXEL_W, PIXEL_H, '#5b9bd5');
-      pxRect(0, 90, PIXEL_W, 90, '#7ab3e0');
+      pxRect(0, 0, PIXEL_W, 90, '#5b9bd5');
+      pxRect(0, 90, PIXEL_W, 90, '#7ab8e6');
       pxRect(0, 180, PIXEL_W, 90, '#a6d1f0');
 
       clouds.forEach((cl, idx) => {
@@ -1443,6 +1554,7 @@
     }
 
     startNotePhase();
+    fetchLeaderboardFromSheet();
     requestAnimationFrame(loop);
   </script>
 </body>
