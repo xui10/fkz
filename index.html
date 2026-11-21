@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>方塊斬!｜遊戲大廳、排行榜與自訂關卡中心</title>
+  <style>
+    :root {
+      --bg-deep: #0f1b2d;
+      --bg-card: #182b47;
+      --bg-panel: #1f375a;
+      --accent-cyan: #7df9ff;
+      --accent-gold: #ffe58f;
+      --accent-green: #95de64;
+      --accent-red: #ff6b6b;
+      --border-light: #5988b8;
+      --text-main: #f4f9ff;
+      --text-sub: #b7d2ee;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px 14px 48px;
+      background: radial-gradient(circle at top, #1d3557 0%, var(--bg-deep) 68%);
+      color: var(--text-main);
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 980px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 20px; }
+
+    .main-title {
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--accent-cyan);
+      text-shadow: 0 3px 0 #08111e;
+      margin: 0 0 6px;
+      letter-spacing: 2px;
+    }
+
+    .sub-title { color: var(--text-sub); font-size: 15px; margin: 0 0 14px; }
+
+    .top-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+
+    .tab-btn, .link-btn {
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 800;
+      font-family: inherit;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid var(--border-light);
+      background: var(--bg-card);
+      color: var(--text-main);
+      text-decoration: none;
+      transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .tab-btn:hover, .link-btn:hover { border-color: var(--accent-cyan); background: var(--bg-panel); }
+    .tab-btn.active { background: var(--accent-cyan); color: #0b192c; border-color: #c8fdff; }
+
+    .link-btn.play-now {
+      background: var(--accent-gold);
+      color: #162238;
+      border-color: #fff5cc;
+      box-shadow: 0 3px 0 #9c7417;
+    }
+    .link-btn.play-now:active { transform: translateY(2px); box-shadow: 0 1px 0 #9c7417; }
+
+    .status-banner {
+      margin: 14px auto 18px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: rgba(24, 43, 71, 0.9);
+      border-left: 5px solid var(--accent-cyan);
+      font-size: 14px;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-banner.error { border-left-color: var(--accent-red); color: #ffc2c2; }
+    .status-banner.success { border-left-color: var(--accent-green); color: #d9f7be; }
+
+    .panel {
+      display: none;
+      background: rgba(24, 43, 71, 0.92);
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    }
+    .panel.active { display: block; }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .start-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .field-group {
+      background: var(--bg-panel);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(125, 249, 255, 0.22);
+    }
+    .field-group label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--accent-cyan); }
+
+    input[type="text"], input[type="number"], input[type="password"], select {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid #6b9ac8;
+      background: #0e1a2c;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    .action-btn {
+      padding: 9px 16px;
+      border-radius: 7px;
+      border: none;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.08s ease;
+    }
+    .action-btn:hover { opacity: 0.92; }
+    .action-btn:active { transform: translateY(1px); }
+
+    .btn-primary { background: var(--accent-cyan); color: #0b182a; }
+    .btn-gold { background: var(--accent-gold); color: #162238; }
+    .btn-green { background: var(--accent-green); color: #10240b; }
+    .btn-danger { background: var(--accent-red); color: #fff; }
+    .btn-ghost { background: transparent; color: var(--text-sub); border: 1px solid var(--border-light); }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid rgba(183, 210, 238, 0.18); text-align: center; }
+    th { background: rgba(11, 23, 41, 0.7); color: var(--accent-cyan); font-weight: 800; }
+
+    .rank-1 { color: #ffd700; font-weight: 900; }
+    .rank-2 { color: #e2e8f0; font-weight: 800; }
+    .rank-3 { color: #f59e0b; font-weight: 800; }
+
+    .editor-layout {
+      display: grid;
+      grid-template-columns: minmax(240px, 310px) 1fr;
+      gap: 22px;
+      align-items: start;
+      margin-bottom: 26px;
+    }
+    @media (max-width: 720px) { .editor-layout { grid-template-columns: 1fr; } }
+
+    .grid-7x7 {
+      display: grid;
+      grid-template-columns: repeat(7, 38px);
+      grid-template-rows: repeat(7, 38px);
+      gap: 4px;
+      justify-content: center;
+      background: #0d1828;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid var(--accent-cyan);
+      user-select: none;
+    }
+
+    .cell-7x7 {
+      width: 38px;
+      height: 38px;
+      border-radius: 5px;
+      border: 1px solid #35587c;
+      background: #1b2f4a;
+      cursor: pointer;
+      transition: background 0.1s ease;
+    }
+    .cell-7x7.active {
+      background: #ffffff;
+      border-color: #7df9ff;
+      box-shadow: 0 0 8px rgba(125, 249, 255, 0.65);
+    }
+
+    .grid-tools { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .custom-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(275px, 1fr)); gap: 14px; margin-top: 12px; }
+
+    .level-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .mini-grid {
+      display: inline-grid;
+      grid-template-columns: repeat(7, 10px);
+      gap: 2px;
+      background: #0b1524;
+      padding: 6px;
+      border-radius: 6px;
+      margin: 6px 0;
+    }
+    .mini-cell { width: 10px; height: 10px; border-radius: 2px; background: #1e3350; }
+    .mini-cell.on { background: #ffffff; }
+    .card-meta { font-size: 13px; color: var(--text-sub); }
+    .card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .empty-tip { color: var(--text-sub); text-align: center; padding: 20px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 class="main-title">方塊斬!</h1>
+      <p class="sub-title">遊戲大廳 × 英雄排行榜 × 7×7 自訂關卡中心（Google Sheets 雲端同步）</p>
+      <div class="top-bar">
+        <button class="tab-btn active" data-tab="lobby">快速開始與排行榜</button>
+        <button class="tab-btn" data-tab="custom">自訂關卡工坊 (CRUD)</button>
+        <button class="link-btn play-now" id="headerPlayBtn" type="button">前往遊戲畫面 (game.html)</button>
+      </div>
+    </header>
+
+    <div id="statusBanner" class="status-banner">
+      <span id="statusText">正在連線至 Google Sheets 後端...</span>
+      <button class="action-btn btn-ghost" id="refreshBtn" type="button">重新整理資料</button>
+    </div>
+
+    <section id="tab-lobby" class="panel active">
+      <h2>設定挑戰資訊並開始遊戲</h2>
+      <div class="start-box">
+        <div class="field-group">
+          <label for="playerNameInput">玩家暱稱（將記錄於排行榜）</label>
+          <input id="playerNameInput" type="text" maxlength="20" placeholder="例如：斬擊達人" />
+        </div>
+        <div class="field-group">
+          <label for="modeSelect">遊玩模式</label>
+          <select id="modeSelect">
+            <option value="standard">標準 10 關（字形＋幾何圖案）</option>
+            <option value="custom">玩家自訂關卡模式（從雲端載入）</option>
+          </select>
+        </div>
+        <div class="field-group" style="display: flex; align-items: flex-end;">
+          <button class="action-btn btn-gold" id="startGameBtn" type="button" style="width: 100%; padding: 11px 16px; font-size: 16px;">
+            立即進入《方塊斬!》
+          </button>
+        </div>
+      </div>
+
+      <h2><span>英雄排行榜（查詢 Read / 編輯 Update / 刪除 Delete）</span></h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>名次</th>
+              <th>玩家暱稱</th>
+              <th>最高通過關卡</th>
+              <th>剩餘血量</th>
+              <th>總耗時(秒)</th>
+              <th>模式</th>
+              <th>紀錄時間</th>
+              <th>管理操作</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+            <tr><td colspan="8" class="empty-tip">載入中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tab-custom" class="panel">
+      <h2 id="editorHeading">建立新的 7×7 自訂關卡（新增 Create）</h2>
+      <div class="editor-layout">
+        <div style="text-align: center;">
+          <div style="font-size: 14px; color: var(--accent-cyan); font-weight: 700; margin-bottom: 8px;">
+            點擊格子切換「保留白塊(1) / 需打掉(0)」
+          </div>
+          <div id="gridEditor" class="grid-7x7"></div>
+          <div class="grid-tools">
+            <button class="action-btn btn-ghost" id="fillAllBtn" type="button">全填白塊</button>
+            <button class="action-btn btn-ghost" id="clearAllBtn" type="button">全部清空</button>
+            <button class="action-btn btn-ghost" id="presetCrossBtn" type="button">範例：十字</button>
+          </div>
+        </div>
+
+        <div>
+          <form id="customLevelForm">
+            <input type="hidden" id="editingLevelId" value="" />
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="creatorInput">創作者暱稱 *</label>
+                <input id="creatorInput" type="text" maxlength="20" required placeholder="例如：小方塊" />
+              </div>
+              <div class="field-group">
+                <label for="levelTitleInput">關卡名稱 *</label>
+                <input id="levelTitleInput" type="text" maxlength="30" required placeholder="例如：特製田字迷宮" />
+              </div>
+              <div class="field-group">
+                <label for="memSecInput">記憶秒數 (3~20)</label>
+                <input id="memSecInput" type="number" min="3" max="20" value="7" required />
+              </div>
+              <div class="field-group">
+                <label for="playSecInput">遊玩秒數 (10~60)</label>
+                <input id="playSecInput" type="number" min="10" max="60" value="28" required />
+              </div>
+              <div class="field-group" style="grid-column: 1 / -1;">
+                <label for="levelPwdInput">修改／刪除密碼 *（日後編輯或刪除此關卡需驗證）</label>
+                <input id="levelPwdInput" type="password" maxlength="24" required placeholder="請設定密碼，例如 1234" />
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+              <button class="action-btn btn-green" id="submitLevelBtn" type="submit">發布到 Google Sheets</button>
+              <button class="action-btn btn-ghost" id="cancelEditBtn" type="button" style="display: none;">取消編輯模式</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <h2>已發布的自訂關卡庫（查詢 Read / 修改 Update / 刪除 Delete）</h2>
+      <div id="customLevelsList" class="custom-list">
+        <div class="empty-tip">載入中...</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzW9ATS7oMu_rUKBdurmz6KQhPVAZ5IStfkyQgnVcJN0nCwcFU3tcyd6_1ObH1E6NAD/exec';
+
+    const STORAGE_NAME_KEY = 'blockSlash_playerName';
+    const STORAGE_MODE_KEY = 'blockSlash_playMode';
+
+    let leaderboardData = [];
+    let customLevelsData = [];
+    let editorGrid = Array.from({ length: 7 }, () => Array(7).fill(0));
+
+    const statusBanner = document.getElementById('statusBanner');
+    const statusText = document.getElementById('statusText');
+    const playerNameInput = document.getElementById('playerNameInput');
+    const modeSelect = document.getElementById('modeSelect');
+
+    function setStatus(text, type = 'normal') {
+      statusText.textContent = text;
+      statusBanner.className = 'status-banner' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+    }
+
+    function isApiConfigured() {
+      return API_URL && !API_URL.includes('YOUR_APPS_SCRIPT_WEB_APP_URL') && API_URL.startsWith('http');
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    function goToGame() {
+      const name = (playerNameInput.value || '勇者').trim() || '勇者';
+      const mode = modeSelect.value || 'standard';
+      localStorage.setItem(STORAGE_NAME_KEY, name);
+      localStorage.setItem(STORAGE_MODE_KEY, mode);
+      if (!playerNameInput.value.trim()) playerNameInput.value = name;
+      window.location.href = `game.html?player=${encodeURIComponent(name)}&mode=${encodeURIComponent(mode)}`;
+    }
+
+    document.getElementById('startGameBtn').addEventListener('click', goToGame);
+    document.getElementById('headerPlayBtn').addEventListener('click', goToGame);
+    document.getElementById('refreshBtn').addEventListener('click', loadAllData);
+
+    playerNameInput.value = localStorage.getItem(STORAGE_NAME_KEY) || '';
+    modeSelect.value = localStorage.getItem(STORAGE_MODE_KEY) || 'standard';
+
+    async function loadAllData() {
+      if (!isApiConfigured()) {
+        setStatus('尚未設定 API_URL，請先在 index.html 填入你的 Google Apps Script 網址。', 'error');
+        document.getElementById('leaderboardBody').innerHTML = '<tr><td colspan="8" class="empty-tip">請先設定 API_URL</td></tr>';
+        document.getElementById('customLevelsList').innerHTML = '<div class="empty-tip">請先設定 API_URL</div>';
+        return;
+      }
+
+      setStatus('正在從 Google Sheets 讀取排行榜與自訂關卡...');
+      try {
+        const res = await fetch(`${API_URL}?action=all`);
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error || '讀取資料失敗');
+        leaderboardData = json.leaderboard || [];
+        customLevelsData = json.customLevels || [];
+        renderLeaderboard();
+        renderCustomLevels();
+        setStatus(`已同步 Google Sheets（排行榜 ${leaderboardData.length} 筆、自訂關卡 ${customLevelsData.length} 關）`, 'success');
+      } catch (err) {
+        setStatus('連線失敗：' + err.message, 'error');
+      }
+    }
+
+    async function postAction(payload) {
+      if (!isApiConfigured()) {
+        alert('請先在 index.html 設定正確的 API_URL');
+        return { ok: false, error: '未設定 API_URL' };
+      }
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
+    function renderLeaderboard() {
+      const tbody = document.getElementById('leaderboardBody');
+      if (!leaderboardData.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-tip">目前還沒有戰績紀錄，快去玩一局吧！</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = leaderboardData.map((item, idx) => {
+        const rank = idx + 1;
+        const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+        const hearts = '♥'.repeat(Math.max(0, Number(item.remainingHP || 0))) +
+                       '♡'.repeat(Math.max(0, 3 - Number(item.remainingHP || 0)));
+        return `
+          <tr>
+            <td class="${rankClass}">#${rank}</td>
+            <td><strong>${escapeHtml(item.playerName)}</strong></td>
+            <td>${escapeHtml(item.clearedStage)}</td>
+            <td style="color: #ff6b6b;">${hearts}</td>
+            <td>${Number(item.totalTimeSec || 0)}s</td>
+            <td>${escapeHtml(item.mode)}</td>
+            <td style="font-size: 12px; color: var(--text-sub);">${escapeHtml(item.createdAt)}</td>
+            <td>
+              <button class="action-btn btn-ghost" style="padding: 4px 8px; font-size: 12px;" onclick="editScoreName('${escapeJs(item.id)}', '${escapeJs(item.playerName)}')">改名</button>
+              <button class="action-btn btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="removeScore('${escapeJs(item.id)}')">刪除</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.editScoreName = async function(id, oldName) {
+      const nextName = prompt('請輸入新的玩家暱稱：', oldName);
+      if (!nextName || !nextName.trim()) return;
+      setStatus('正在更新玩家暱稱...');
+      const res = await postAction({ action: 'updateScore', id, playerName: nextName.trim() });
+      if (res.ok) {
+        await loadAllData();
+        setStatus('玩家暱稱已更新！', 'success');
+      } else {
+        setStatus('更新失敗：' + res.error, 'error');
+      }
+    };
+
+    window.removeScore = async function(id) {
+      if (!confirm('確定要刪除這筆戰績紀錄嗎？')) return;
+      setStatus('正在刪除戰績紀錄...');
+      const res = await postAction({ action: 'deleteScore', id });
+      if (res.ok) {
+        await loadAllData();
+        setStatus('已刪除戰績紀錄！', 'success');
+      } else {
+        setStatus('刪除失敗：' + res.error, 'error');
+      }
+    };
+
+    const gridEditorEl = document.getElementById('gridEditor');
+    function renderGridEditor() {
+      gridEditorEl.innerHTML = '';
+      for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < 7; c++) {
+          const cell = document.createElement('button');
+          cell.type = 'button';
+          cell.className = 'cell-7x7' + (editorGrid[r][c] === 1 ? ' active' : '');
+          cell.title = `第 ${r + 1} 列, 第 ${c + 1} 欄`;
+          cell.addEventListener('click', () => {
+            editorGrid[r][c] = editorGrid[r][c] === 1 ? 0 : 1;
+            renderGridEditor();
+          });
+          gridEditorEl.appendChild(cell);
+        }
+      }
+    }
+
+    document.getElementById('fillAllBtn').addEventListener('click', () => {
+      editorGrid = Array.from({ length: 7 }, () => Array(7).fill(1));
+      renderGridEditor();
+    });
+
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+      editorGrid = Array.from({ length: 7 }, () => Array(7).fill(0));
+      renderGridEditor();
+    });
+
+    document.getElementById('presetCrossBtn').addEventListener('click', () => {
+      editorGrid = Array.from({ length: 7 }, (_, r) =>
+        Array.from({ length: 7 }, (_, c) => (r === 3 || c === 3 ? 1 : 0))
+      );
+      renderGridEditor();
+    });
+
+    const customLevelForm = document.getElementById('customLevelForm');
+    customLevelForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const editingId = document.getElementById('editingLevelId').value.trim();
+      const creator = document.getElementById('creatorInput').value.trim();
+      const levelTitle = document.getElementById('levelTitleInput').value.trim();
+      const memorizeSec = Number(document.getElementById('memSecInput').value);
+      const playSec = Number(document.getElementById('playSecInput').value);
+      const password = document.getElementById('levelPwdInput').value;
+
+      const payload = editingId
+        ? { action: 'updateCustomLevel', levelId: editingId, creator, levelTitle, memorizeSec, playSec, grid: editorGrid, password }
+        : { action: 'addCustomLevel', creator, levelTitle, memorizeSec, playSec, grid: editorGrid, password };
+
+      setStatus(editingId ? '正在驗證密碼並更新關卡...' : '正在發布自訂關卡到 Google Sheets...');
+      const res = await postAction(payload);
+      if (res.ok) {
+        resetEditorForm();
+        await loadAllData();
+        setStatus(editingId ? '自訂關卡已成功更新！' : '自訂關卡已發布成功！', 'success');
+      } else {
+        setStatus('操作失敗：' + res.error, 'error');
+        alert(res.error || '操作失敗');
+      }
+    });
+
+    function resetEditorForm() {
+      document.getElementById('editingLevelId').value = '';
+      document.getElementById('levelTitleInput').value = '';
+      document.getElementById('levelPwdInput').value = '';
+      document.getElementById('editorHeading').textContent = '建立新的 7×7 自訂關卡（新增 Create）';
+      document.getElementById('submitLevelBtn').textContent = '發布到 Google Sheets';
+      document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+
+    document.getElementById('cancelEditBtn').addEventListener('click', resetEditorForm);
+
+    function renderCustomLevels() {
+      const listEl = document.getElementById('customLevelsList');
+      if (!customLevelsData.length) {
+        listEl.innerHTML = '<div class="empty-tip">目前還沒有玩家自訂關卡，上方直接畫一張並發布吧！</div>';
+        return;
+      }
+
+      listEl.innerHTML = customLevelsData.map((lv, index) => {
+        const grid = Array.isArray(lv.grid) && lv.grid.length === 7
+          ? lv.grid
+          : Array.from({ length: 7 }, () => Array(7).fill(0));
+        const miniCells = grid.flat().map(v => `<span class="mini-cell ${v ? 'on' : ''}"></span>`).join('');
+        return `
+          <div class="level-card">
+            <div>
+              <div style="font-size: 16px; font-weight: 800; color: var(--accent-cyan);">
+                #${index + 1} ${escapeHtml(lv.levelTitle)}
+              </div>
+              <div class="card-meta">創作者：${escapeHtml(lv.creator)}</div>
+              <div class="card-meta">記憶 ${lv.memorizeSec}s / 遊玩 ${lv.playSec}s</div>
+              <div class="mini-grid">${miniCells}</div>
+            </div>
+            <div class="card-actions">
+              <button class="action-btn btn-gold" style="padding: 5px 10px; font-size: 12px;" onclick="playSingleCustom(${index})">用此關開玩</button>
+              <button class="action-btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="startEditLevel('${escapeJs(lv.levelId)}')">修改</button>
+              <button class="action-btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="removeCustomLevel('${escapeJs(lv.levelId)}', '${escapeJs(lv.levelTitle)}')">刪除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.playSingleCustom = function(index) {
+      const name = (playerNameInput.value || '勇者').trim() || '勇者';
+      localStorage.setItem(STORAGE_NAME_KEY, name);
+      localStorage.setItem(STORAGE_MODE_KEY, 'custom');
+      localStorage.setItem('blockSlash_selectedCustomIndex', String(index));
+      window.location.href = `game.html?player=${encodeURIComponent(name)}&mode=custom&customIndex=${index}`;
+    };
+
+    window.startEditLevel = function(levelId) {
+      const target = customLevelsData.find(item => item.levelId === levelId);
+      if (!target) return;
+      document.getElementById('editingLevelId').value = target.levelId;
+      document.getElementById('creatorInput').value = target.creator;
+      document.getElementById('levelTitleInput').value = target.levelTitle;
+      document.getElementById('memSecInput').value = target.memorizeSec;
+      document.getElementById('playSecInput').value = target.playSec;
+      document.getElementById('levelPwdInput').value = '';
+      document.getElementById('editorHeading').textContent = `編輯自訂關卡：${target.levelTitle}（需輸入密碼）`;
+      document.getElementById('submitLevelBtn').textContent = '儲存修改';
+      document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+      editorGrid = Array.from({ length: 7 }, (_, r) =>
+        Array.from({ length: 7 }, (_, c) => (target.grid && target.grid[r] && target.grid[r][c] ? 1 : 0))
+      );
+      renderGridEditor();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.removeCustomLevel = async function(levelId, title) {
+      const pwd = prompt(`請輸入「${title}」的修改／刪除密碼：`);
+      if (pwd === null) return;
+      if (!pwd.trim()) { alert('請輸入密碼'); return; }
+      setStatus('正在驗證密碼並刪除自訂關卡...');
+      const res = await postAction({ action: 'deleteCustomLevel', levelId, password: pwd });
+      if (res.ok) {
+        await loadAllData();
+        setStatus('自訂關卡已刪除！', 'success');
+      } else {
+        setStatus('刪除失敗：' + res.error, 'error');
+        alert(res.error || '密碼錯誤或刪除失敗');
+      }
+    };
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    function escapeJs(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    renderGridEditor();
+    loadAllData();
+  </script>
+</body>
+</html>
