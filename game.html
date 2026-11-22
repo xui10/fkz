@@ -290,7 +290,7 @@
 
     async function submitScoreToSheet(clearedStageLabel, remainingHP) {
       if (scoreSent) return;
-      if (!API_URL || API_URL.includes('https://script.google.com/macros/s/AKfycbzW9ATS7oMu_rUKBdurmz6KQhPVAZ5IStfkyQgnVcJN0nCwcFU3tcyd6_1ObH1E6NAD/exec'')) {
+      if (!API_URL || API_URL.includes('AKfycbzW9ATS7oMu_rUKBdurmz6KQhPVAZ5IStfkyOgnVcJN0nCwcFU3tcyd6_1obH1E6NAD')) {
         syncStatusEl.textContent = '未設定 API_URL，戰績未寫入';
         return;
       }
