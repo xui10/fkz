@@ -299,7 +299,7 @@
             clearedStage: clearedStageLabel,
             remainingHP: remainingHP,
             totalTimeSec: totalTimeSec,
-           mode: activeMode === 'custom' ? '自訂關卡' : '標準10關'
+            mode: activeMode === 'custom' ? '自訂關卡' : '標準10關'
           })
         });
         const result = await res.json().catch(() => ({}));
@@ -314,80 +314,7 @@
         syncStatusEl.textContent = '戰績上傳失敗';
       }
     }
-const urlParams = new URLSearchParams(window.location.search);
-    const activeMode = urlParams.get('mode') || localStorage.getItem('blockSlash_playMode') || 'standard';
-    const rawCustomIndex = urlParams.get('customIndex') ?? localStorage.getItem('blockSlash_selectedCustomIndex');
-    const selectedCustomIndex = rawCustomIndex !== null && rawCustomIndex !== '' ? Number(rawCustomIndex) : null;
 
-    function normalizeGrid7x7(rawGrid) {
-      let parsed = rawGrid;
-      if (typeof parsed === 'string') {
-        try { parsed = JSON.parse(parsed); } catch (_) { parsed = null; }
-      }
-      if (Array.isArray(parsed) && parsed.length === 49 && !Array.isArray(parsed[0])) {
-        const rows = [];
-        for (let r = 0; r < 7; r++) {
-          rows.push(parsed.slice(r * 7, (r + 1) * 7).map(v => (Number(v) === 1 || v === true ? 1 : 0)));
-        }
-        return rows;
-      }
-      if (Array.isArray(parsed) && parsed.length === 7) {
-        return Array.from({ length: 7 }, (_, r) =>
-          Array.from({ length: 7 }, (_, c) => {
-            const row = parsed[r];
-            const val = Array.isArray(row) ? row[c] : 0;
-            return Number(val) === 1 || val === true ? 1 : 0;
-          })
-        );
-      }
-      return Array.from({ length: 7 }, () => Array(7).fill(0));
-    }
-
-    function mapCustomLevelsToGameLevels(rawList) {
-      if (!Array.isArray(rawList) || rawList.length === 0) return [];
-      let list = rawList.map((lv, idx) => {
-        const title = lv.levelTitle || lv.title || `自訂關卡 ${idx + 1}`;
-        const mem = Math.max(3, Math.min(20, Number(lv.memorizeSec ?? lv.memSec ?? 7) || 7));
-        const play = Math.max(10, Math.min(60, Number(lv.playSec ?? 28) || 28));
-        const map = normalizeGrid7x7(lv.grid ?? lv.map);
-        return {
-          name: `自訂 #${idx + 1}`,
-          label: title,
-          grid: 7,
-          memorizeSec: mem,
-          playSec: play,
-          map
-        };
-      });
-
-      if (selectedCustomIndex !== null && !Number.isNaN(selectedCustomIndex) && list[selectedCustomIndex]) {
-        const picked = list[selectedCustomIndex];
-        list = [picked, ...list.filter((_, i) => i !== selectedCustomIndex)];
-      }
-      return list;
-    }
-
-    async function loadCustomLevelsIntoGame() {
-      if (activeMode !== 'custom') return false;
-      try {
-        msg.textContent = '正在從 Google Sheets 載入玩家自訂關卡...';
-        const res = await fetch(`${API_URL}?action=all`);
-        const data = await res.json();
-        const customRows = data?.customLevels || data?.levels || [];
-        const converted = mapCustomLevelsToGameLevels(customRows);
-        if (converted.length > 0) {
-          LEVELS.splice(0, LEVELS.length, ...converted);
-          currentLevel = LEVELS[0];
-          return true;
-        }
-        msg.textContent = '目前沒有可用的自訂關卡，改以標準 10 關進行';
-        return false;
-      } catch (err) {
-        console.error('載入自訂關卡失敗：', err);
-        msg.textContent = '自訂關卡載入失敗，改以標準 10 關進行';
-        return false;
-      }
-    }
     const canvas = document.getElementById('c');
     const ctx = canvas.getContext('2d');
 
@@ -674,8 +601,8 @@ const urlParams = new URLSearchParams(window.location.search);
     let levelIdx = 0;
     let hp = MAX_HP;
     let currentLevel = LEVELS[0];
-	
-	const urlParams = new URLSearchParams(window.location.search);
+
+    const urlParams = new URLSearchParams(window.location.search);
     const activeMode = urlParams.get('mode') || localStorage.getItem('blockSlash_playMode') || 'standard';
     const rawCustomIndex = urlParams.get('customIndex') ?? localStorage.getItem('blockSlash_selectedCustomIndex');
     const selectedCustomIndex = rawCustomIndex !== null && rawCustomIndex !== '' ? Number(rawCustomIndex) : null;
@@ -749,7 +676,7 @@ const urlParams = new URLSearchParams(window.location.search);
         return false;
       }
     }
-	
+
     let phase = 'note';
     let noteAge = 0;
     let noteOffsetX = -460;
@@ -1698,7 +1625,7 @@ const urlParams = new URLSearchParams(window.location.search);
       await loadCustomLevelsIntoGame();
       startNotePhase();
       fetchLeaderboardFromSheet();
-	  requestAnimationFrame(loop);
+      requestAnimationFrame(loop);
     })();
   </script>
 </body>
