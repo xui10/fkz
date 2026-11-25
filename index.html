@@ -462,7 +462,7 @@
     const ADMIN_PWD = '1234';
 
     window.editScoreName = async function(id, oldName) {
-      const pwd = prompt('請輸入管理密碼才能修改暱稱：');
+      const pwd = prompt('請輸入密碼才能修改暱稱：');
       if (pwd !== ADMIN_PWD) {
         if (pwd !== null) alert('密碼錯誤，無法修改！');
         return;
