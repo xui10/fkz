@@ -268,10 +268,6 @@
     }
 
     async function fetchLeaderboardFromSheet() {
-      if (!API_URL || API_URL.includes('https://script.google.com/macros/s/AKfycbzW9ATS7oMu_rUKBdurmz6KQhPVAZ5IStfkyQgnVcJN0nCwcFU3tcyd6_1ObH1E6NAD/exec')) {
-        syncStatusEl.textContent = '請先填入 API_URL';
-        return;
-      }
       try {
         syncStatusEl.textContent = '讀取排行榜中...';
         const res = await fetch(`${API_URL}?action=leaderboard`);
@@ -290,10 +286,6 @@
 
     async function submitScoreToSheet(clearedStageLabel, remainingHP) {
       if (scoreSent) return;
-      if (!API_URL || API_URL.includes('AKfycbzW9ATS7oMu_rUKBdurmz6KQhPVAZ5IStfkyOgnVcJN0nCwcFU3tcyd6_1obH1E6NAD')) {
-        syncStatusEl.textContent = '未設定 API_URL，戰績未寫入';
-        return;
-      }
       scoreSent = true;
       const totalTimeSec = Math.max(1, Math.round((Date.now() - scoreRunStart) / 1000));
       syncStatusEl.textContent = '上傳戰績中...';
