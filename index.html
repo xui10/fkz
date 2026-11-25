@@ -459,7 +459,14 @@
       }).join('');
     }
 
+    const ADMIN_PWD = '1234';
+
     window.editScoreName = async function(id, oldName) {
+      const pwd = prompt('請輸入管理密碼才能修改暱稱：');
+      if (pwd !== ADMIN_PWD) {
+        if (pwd !== null) alert('密碼錯誤，無法修改！');
+        return;
+      }
       const nextName = prompt('請輸入新的玩家暱稱：', oldName);
       if (!nextName || !nextName.trim()) return;
       setStatus('正在更新玩家暱稱...');
@@ -473,7 +480,11 @@
     };
 
     window.removeScore = async function(id) {
-      if (!confirm('確定要刪除這筆戰績紀錄嗎？')) return;
+      const pwd = prompt('請輸入密碼才能刪除戰績：');
+      if (pwd !== ADMIN_PWD) {
+        if (pwd !== null) alert('密碼錯誤，無法刪除！');
+        return;
+      }
       setStatus('正在刪除戰績紀錄...');
       const res = await postAction({ action: 'deleteScore', id });
       if (res.ok) {
