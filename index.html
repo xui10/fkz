@@ -382,6 +382,7 @@
       const mode = modeSelect.value || 'standard';
       localStorage.setItem(STORAGE_NAME_KEY, name);
       localStorage.setItem(STORAGE_MODE_KEY, mode);
+      localStorage.removeItem('blockSlash_selectedCustomIndex');
       if (!playerNameInput.value.trim()) playerNameInput.value = name;
       window.location.href = `game.html?player=${encodeURIComponent(name)}&mode=${encodeURIComponent(mode)}`;
     }
@@ -590,7 +591,6 @@
               <div class="mini-grid">${miniCells}</div>
             </div>
             <div class="card-actions">
-              <button class="action-btn btn-gold" style="padding: 5px 10px; font-size: 12px;" onclick="playSingleCustom(${index})">用此關開玩</button>
               <button class="action-btn btn-primary" style="padding: 5px 10px; font-size: 12px;" onclick="startEditLevel('${escapeJs(lv.levelId)}')">修改</button>
               <button class="action-btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="removeCustomLevel('${escapeJs(lv.levelId)}', '${escapeJs(lv.levelTitle)}')">刪除</button>
             </div>
@@ -598,14 +598,6 @@
         `;
       }).join('');
     }
-
-    window.playSingleCustom = function(index) {
-      const name = (playerNameInput.value || '勇者').trim() || '勇者';
-      localStorage.setItem(STORAGE_NAME_KEY, name);
-      localStorage.setItem(STORAGE_MODE_KEY, 'custom');
-      localStorage.setItem('blockSlash_selectedCustomIndex', String(index));
-      window.location.href = `game.html?player=${encodeURIComponent(name)}&mode=custom&customIndex=${index}`;
-    };
 
     window.startEditLevel = function(levelId) {
       const target = customLevelsData.find(item => item.levelId === levelId);
