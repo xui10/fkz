@@ -37,11 +37,9 @@
       font-weight: 900;
       color: var(--accent-cyan);
       text-shadow: 0 3px 0 #08111e;
-      margin: 0 0 6px;
+      margin: 0 0 12px;
       letter-spacing: 2px;
     }
-
-    .sub-title { color: var(--text-sub); font-size: 15px; margin: 0 0 14px; }
 
     .top-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 
@@ -232,11 +230,9 @@
   <div class="container">
     <header>
       <h1 class="main-title">方塊斬!</h1>
-      <p class="sub-title">遊戲大廳 × 英雄排行榜 × 7×7 自訂關卡中心（Google Sheets 雲端同步）</p>
       <div class="top-bar">
         <button class="tab-btn active" data-tab="lobby">快速開始與排行榜</button>
-        <button class="tab-btn" data-tab="custom">自訂關卡工坊 (CRUD)</button>
-        <button class="link-btn play-now" id="headerPlayBtn" type="button">前往遊戲畫面 (game.html)</button>
+        <button class="tab-btn" data-tab="custom">自訂關卡工坊</button>
       </div>
     </header>
 
@@ -266,7 +262,7 @@
         </div>
       </div>
 
-      <h2><span>英雄排行榜（查詢 Read / 編輯 Update / 刪除 Delete）</span></h2>
+      <h2><span>英雄排行榜</span></h2>
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -289,7 +285,7 @@
     </section>
 
     <section id="tab-custom" class="panel">
-      <h2 id="editorHeading">建立新的 7×7 自訂關卡（新增 Create）</h2>
+      <h2 id="editorHeading">建立新的 7×7 自訂關卡</h2>
       <div class="editor-layout">
         <div style="text-align: center;">
           <div style="font-size: 14px; color: var(--accent-cyan); font-weight: 700; margin-bottom: 8px;">
@@ -337,7 +333,7 @@
         </div>
       </div>
 
-      <h2>已發布的自訂關卡庫（查詢 Read / 修改 Update / 刪除 Delete）</h2>
+      <h2>已發布的自訂關卡庫</h2>
       <div id="customLevelsList" class="custom-list">
         <div class="empty-tip">載入中...</div>
       </div>
@@ -388,7 +384,6 @@
     }
 
     document.getElementById('startGameBtn').addEventListener('click', goToGame);
-    document.getElementById('headerPlayBtn').addEventListener('click', goToGame);
     document.getElementById('refreshBtn').addEventListener('click', loadAllData);
 
     playerNameInput.value = localStorage.getItem(STORAGE_NAME_KEY) || '';
@@ -561,7 +556,7 @@
       document.getElementById('editingLevelId').value = '';
       document.getElementById('levelTitleInput').value = '';
       document.getElementById('levelPwdInput').value = '';
-      document.getElementById('editorHeading').textContent = '建立新的 7×7 自訂關卡（新增 Create）';
+      document.getElementById('editorHeading').textContent = '建立新的 7×7 自訂關卡';
       document.getElementById('submitLevelBtn').textContent = '發布到 Google Sheets';
       document.getElementById('cancelEditBtn').style.display = 'none';
     }
